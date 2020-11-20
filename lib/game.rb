@@ -2,6 +2,11 @@ class Game
   ROLES = %i(server returner)
   SCORES = ['0', '15', '30', '40']
   DEUCE_SCORES = ['40', 'ad']
+  DEUCE_RESULT = {
+    0 => [0,0],
+    1 => [1,0],
+    -1 => [0,1],
+  }
   MIN_PTS_TO_WIN = 4
   WIN_BY_AMOUNT = 2
 
@@ -17,11 +22,9 @@ class Game
     server_pts = @points.count(:server)
     returner_pts = @points.count(:returner)
 
-    current_max_pts = [server_pts, returner_pts].max
+    return "game won by #{points_leader}" if game_won?(server_pts, returner_pts)
 
-    return "game won by #{points_leader}" if game_won?(server_pts, returner_pts, current_max_pts)
-
-    score_for_both(server_pts, returner_pts)
+    format(*scores(server_pts, returner_pts))
   end
 
   private
@@ -30,25 +33,34 @@ class Game
     @points.max_by { |role| @points.count(role) }
   end
 
-  def game_won?(server_points, returner_points, current_max_pts)
+  def game_won?(server_points, returner_points)
+    current_max_pts = [server_points, returner_points].max
     current_max_pts >= MIN_PTS_TO_WIN && (server_points - returner_points).abs >= WIN_BY_AMOUNT
   end
 
-  def score_for_both(server_points, returner_points)
+  def scores(server_points, returner_points)
     if deuce_game?(server_points, returner_points)
-      if server_points == returner_points
-        "#{DEUCE_SCORES[0]}:#{DEUCE_SCORES[0]}"
-      elsif server_points > returner_points
-        "#{DEUCE_SCORES[1]}:#{DEUCE_SCORES[0]}"
-      else
-        "#{DEUCE_SCORES[0]}:#{DEUCE_SCORES[1]}"
-      end
+      deuce_scores(server_points, returner_points)
     else
-      "#{SCORES[server_points]}:#{SCORES[returner_points]}"
+      game_scores(server_points, returner_points)
     end
   end
 
   def deuce_game?(server_points, returner_points)
     server_points + returner_points >= 6
+  end
+
+  def deuce_scores(server_points, returner_points)
+    deuce_result = server_points - returner_points
+    server_points, returner_points = DEUCE_RESULT[deuce_result]
+    [DEUCE_SCORES[server_points], DEUCE_SCORES[returner_points]]
+  end
+
+  def game_scores(server_points, returner_points)
+    [SCORES[server_points], SCORES[returner_points]]
+  end
+
+  def format(server_score, returner_score)
+    "#{server_score}:#{returner_score}"
   end
 end

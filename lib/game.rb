@@ -36,8 +36,7 @@ class Game
   end
 
   def game_won?
-    current_max_pts = [server_points, returner_points].max
-    current_max_pts >= MIN_PTS_TO_WIN && (server_points - returner_points).abs >= WIN_BY_AMOUNT
+    [server_points, returner_points].max >= MIN_PTS_TO_WIN && (server_points - returner_points).abs >= WIN_BY_AMOUNT
   end
 
   def scores
@@ -49,9 +48,7 @@ class Game
   end
 
   def deuce_scores
-    deuce_result = server_points - returner_points
-    server_points, returner_points = DEUCE_RESULT[deuce_result]
-    [DEUCE_SCORES[server_points], DEUCE_SCORES[returner_points]]
+    DEUCE_RESULT[server_points - returner_points].map { |pts| DEUCE_SCORES[pts] }
   end
 
   def game_scores
